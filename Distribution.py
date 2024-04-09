@@ -42,8 +42,12 @@ def distribution(dir):
     createChart(storage)
 
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) != 2:
         print("./Distribution.py ./Apple")
         exit(1)
     distribution(sys.argv[1])
+
+
+if __name__ == "__main__":
+    main()
