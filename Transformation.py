@@ -1,82 +1,28 @@
-import os
-import sys
-from PIL import Image, ImageEnhance, ImageFilter
-from plantcv import plantcv as pcv
-import numpy as np
-import matplotlib.pyplot as plt
+import argparse
 
 
-def gaussianBlur(img) -> Image:
-    """
-    gaussianBlur image
-    """
-    gray = pcv.rgb2gray(rgb_img=img)
-    threshold_dark = pcv.threshold.binary(
-        gray_img=gray, threshold=110, object_type="dark"
+def options():
+    parser = argparse.ArgumentParser(description="Imaging processing")
+    parser.add_argument("-src", help="Source directory", required=False)
+    parser.add_argument("-dst", help="Destination directory", required=False)
+    parser.add_argument(
+        "-gau", help="Apply Gaussian blur to pictures", action="store_true"
     )
-    gaussian_img = pcv.gaussian_blur(
-        img=threshold_dark, ksize=(5, 5), sigma_x=0, sigma_y=None
-    )
-    return gaussian_img
-
-
-def mask(img, gaussian_img) -> Image:
-    """
-    mask image
-    """
-    masked_image = pcv.apply_mask(img=img, mask=gaussian_img, mask_color="white")
-    return masked_image
-
-
-def roi(img) -> Image:
-    """
-    roi image
-    """
-    roi, roi_hierarchy = pcv.roi.rectangle(img=img, x=100, y=100, h=200, w=200)
-
-    return roi
-
-
-def save(img_arr, path, type):
-    """
-    save image
-    """
-    if type == "GaussianBlur":
-        plt.imshow(img_arr, cmap="gray")
-    else:
-        plt.imshow(img_arr)
-    plt.title(type)
-    plt.axis("on")
-    name, ext = os.path.splitext(path)
-    plt.savefig(f"{name}_{type}{ext}")
-
-
-def augment(img, path):
-    """
-    augment image
-    """
-    img_arr = np.array(img)
-    save(gaussianBlur(img_arr), path, "GaussianBlur")
-    save(mask(img_arr, gaussianBlur(img_arr)), path, "mask")
-    save(roi(img_arr), path, "roi")
-    # save(contrast(img_arr), path, "contrast")
-    # save(bright(img_arr), path, "bright")
-    # save(blur(img_arr), path, "blur")
+    parser.add_argument("-msk", help="Apply mask to pictures", action="store_true")
+    parser.add_argument("-roi", help="Apply ROI to pictures", action="store_true")
+    parser.add_argument("-anz", help="Analyze pictures", action="store_true")
+    parser.add_argument("-psd", help="Generate Pseudolandmarks", action="store_true")
+    parser.add_argument("file_path", help="Path to the image file", nargs="?")
+    args = parser.parse_args()
+    return args
 
 
 def main():
-    if len(sys.argv) != 2:
-        print("python Transformation.py './Apple/apple_healthy/image (1).JPG'")
-        exit(1)
-    path = sys.argv[1]
-    try:
-        with Image.open(path) as img:
-            img.verify()
-        with Image.open(path) as img:
-            augment(img, path)
-    except (IOError, SyntaxError) as e:
-        print(f"Error loading image {path}: {e}")
-        exit(1)
+    args = options()
+    if args.file_path:
+        print(f"Processing file at {args.file_path}")
+    else:
+        print("No file path provided.")
 
 
 if __name__ == "__main__":
